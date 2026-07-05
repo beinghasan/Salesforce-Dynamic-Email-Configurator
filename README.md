@@ -8,6 +8,14 @@ The tool provides a guided experience for selecting an object, discovering field
 
 ---
 
+<img width="1469" height="758" alt="Screenshot 2026-07-06 at 12 53 52 AM" src="https://github.com/user-attachments/assets/8e6c4aa1-8877-4b3d-8e30-4be9c9853359" />
+
+---
+
+<img width="1469" height="588" alt="Screenshot 2026-07-06 at 12 56 29 AM" src="https://github.com/user-attachments/assets/ad0d213d-e0ce-42b1-a06c-5d2003da541c" />
+
+---
+
 ## 2. Objective
 
 The main objective of this tool is to simplify the process of creating reusable email templates for Salesforce records.
