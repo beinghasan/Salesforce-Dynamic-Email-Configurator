@@ -1,0 +1,308 @@
+<template>
+    <lightning-card title="Dynamic Email Template Configurator" icon-name="standard:template">
+        <div class="slds-p-around_medium">
+            <div class="slds-grid slds-gutter">
+                
+                <div class="slds-col slds-size_1-of-3 slds-border_right slds-p-right_medium">
+                    
+                    <div class="slds-m-bottom_medium">
+                        <lightning-radio-group 
+                            name="modeToggle"
+                            label="Configuration Mode"
+                            options={modeOptions}
+                            value={currentMode}
+                            onchange={handleModeChange}
+                            type="button">
+                        </lightning-radio-group>
+                    </div>
+
+                    <template if:true={formRendered}>
+                        
+                        <template if:true={isNewMode}>
+                            <lightning-input 
+                                label="Email Template Name" 
+                                value={templateKey} 
+                                onchange={handleKeyChange} 
+                                required 
+                                placeholder="e.g., Case Escalation Alert"
+                                class="slds-m-bottom_small">
+                            </lightning-input>
+
+                            <div class="slds-form-element slds-m-bottom_small" style="position: relative;">
+                                <label class="slds-form-element__label" for="object-search">Target Object API Name</label>
+                                <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+                                    <lightning-input
+                                        id="object-search"
+                                        type="search"
+                                        value={objectSearchInput}
+                                        placeholder="Search object by name or API name"
+                                        onchange={handleObjectSearchInput}
+                                        onclick={handleObjectInputClick}
+                                        onblur={handleObjectInputBlur}
+                                        variant="label-hidden">
+                                    </lightning-input>
+                                </div>
+                                
+                                <template if:true={showObjectResults}>
+                                    <div class="slds-box slds-box_x-small slds-m-top_x-small slds-theme_default slds-is-absolute" 
+                                        style="position: absolute; z-index: 99999; width: 100%; max-height: 180px; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1px solid #dddbda;">
+                                        <ul class="slds-list_vertical slds-has-dividers_top-space">
+                                            <template for:each={objectSearchOptions} for:item="option">
+                                                <li key={option.value} 
+                                                    class={option.rowClass} 
+                                                    onmousedown={handleObjectSelect} 
+                                                    data-value={option.value}
+                                                    style="cursor: pointer; padding: 8px;">
+                                                    <span>{option.label}</span>
+
+                                                    <template if:true={option.isSelected}>
+                                                        <lightning-icon 
+                                                            icon-name="utility:check" 
+                                                            variant="success" 
+                                                            size="x-small" 
+                                                            title="Selected"
+                                                            class="slds-m-left_small">
+                                                        </lightning-icon>
+                                                    </template>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template if:true={isModifyMode}>
+                            <div class="slds-form-element slds-m-bottom_small" style="position: relative;">
+                                <label class="slds-form-element__label" for="template-search">Search Existing Template</label>
+                                <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+                                    <lightning-input
+                                        id="template-search"
+                                        type="search"
+                                        value={templateSearchInput}
+                                        placeholder="Search template configuration by name..."
+                                        onchange={handleTemplateSearchInput}
+                                        onclick={handleTemplateInputClick}
+                                        onblur={handleTemplateInputBlur}
+                                        variant="label-hidden">
+                                    </lightning-input>
+                                </div>
+                                
+                                <template if:true={showTemplateResults}>
+                                    <div class="slds-box slds-box_x-small slds-m-top_x-small slds-theme_default slds-is-absolute" 
+                                        style="position: absolute; z-index: 99999; width: 100%; max-height: 180px; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1px solid #dddbda;">
+                                        <ul class="slds-list_vertical slds-has-dividers_top-space">
+                                            <template for:each={templateSearchOptions} for:item="option">
+                                                <li key={option.value} 
+                                                    class={option.rowClass} 
+                                                    onmousedown={handleTemplateSelect} 
+                                                    data-value={option.value}
+                                                    style="cursor: pointer; padding: 8px;">
+                                                    <span>{option.label}</span>
+
+                                                    <template if:true={option.isSelected}>
+                                                        <lightning-icon 
+                                                            icon-name="utility:check" 
+                                                            variant="success" 
+                                                            size="x-small" 
+                                                            title="Selected"
+                                                            class="slds-m-left_small">
+                                                        </lightning-icon>
+                                                    </template>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <lightning-input
+                                label="Target Object API Name"
+                                value={objectSearchInput}
+                                disabled
+                                class="slds-m-bottom_small">
+                            </lightning-input>
+
+                            <lightning-input 
+                                label="Email Template Name" 
+                                value={templateKey} 
+                                onchange={handleKeyChange} 
+                                required 
+                                disabled={isFormDisabled}
+                                placeholder="e.g., Case Escalation Alert"
+                                class="slds-m-bottom_small">
+                            </lightning-input>
+                        </template>
+
+                    </template>
+
+                    <template if:true={availableFields.length}>
+                        <div class="slds-m-top_medium">
+                            <p class="slds-text-title_bold slds-m-bottom_x-small">Available Token Placeholders</p>
+                            
+                            <div class="slds-form-element slds-m-bottom_x-small">
+                                <div class="slds-form-element__control">
+                                    <lightning-input
+                                        type="search"
+                                        value={fieldSearchInput}
+                                        onchange={handleFieldSearchChange}
+                                        disabled={isFormDisabled}
+                                        placeholder="Search fields at this level..."
+                                        variant="label-hidden">
+                                    </lightning-input>
+                                </div>
+                            </div>
+
+                            <div class="slds-p-around_x-small slds-theme_shade slds-border_bottom slds-grid slds-grid_vertical-align-center slds-m-bottom_x-small">
+                                <template if:true={isDrilledDeep}>
+                                    <lightning-button-icon 
+                                        icon-name="utility:back" 
+                                        alternative-text="Navigate Back" 
+                                        size="small"
+                                        disabled={isFormDisabled}
+                                        class="slds-m-right_x-small" 
+                                        onclick={handleNavigateBack}>
+                                    </lightning-button-icon>
+                                </template>
+                                <div class="slds-text-title_bold slds-truncate" style="font-size: 11px;">
+                                    Path: <span class="slds-text-color_success">{currentPathString}</span>
+                                </div>
+                            </div>
+
+                            <div class="slds-box slds-theme_default" style="max-height: 350px; overflow-y: auto; padding: 0;">
+                                <ul class="slds-has-dividers_bottom-space">
+                                    <template if:true={filteredAvailableFields.length}>
+                                        <template for:each={filteredAvailableFields} for:item="field">
+                                            <li key={field.uiDisplayLabel} 
+                                                class="slds-p-around_small slds-grid slds-grid_align-spread slds-grid_vertical-align-center fields-row-item"
+                                                onclick={handleFieldClick}
+                                                data-token={field.finalToken}
+                                                data-islookup={field.isLookup}
+                                                style="cursor: pointer; border-bottom: 1px solid #e1e4e6;">
+                                                
+                                                <div class="slds-truncate slds-p-right_x-small">
+                                                    <span class="slds-text-body_regular" style="font-weight: 500;">{field.uiDisplayLabel}</span>
+                                                    <div class="slds-text-color_weak slds-text-font_monospace" style="font-size: 10px; margin-top: 2px;">
+                                                        {field.name} ({field.type})
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <template if:true={field.isLookup}>
+                                                        <lightning-button-icon
+                                                            icon-name="utility:chevronright"
+                                                            variant="border-filled"
+                                                            size="small"
+                                                            alternative-text="Drill Deeper"
+                                                            disabled={isFormDisabled}
+                                                            data-targetobject={field.referenceTo}
+                                                            data-relname={field.relationshipName}
+                                                            data-label={field.label}
+                                                            onclick={handleDrillDown}>
+                                                        </lightning-button-icon>
+                                                    </template>
+                                                    <template if:false={field.isLookup}>
+                                                        <span class="slds-badge slds-theme_lightest" style="font-size: 10px;">Copy</span>
+                                                    </template>
+                                                </div>
+                                            </li>
+                                        </template>
+                                    </template>
+                                    
+                                    <template if:false={filteredAvailableFields.length}>
+                                        <li class="slds-p-around_medium slds-text-align_center slds-text-color_weak">
+                                            No matching field parameters found.
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="slds-col slds-size_2-of-3 slds-p-left_medium">
+
+                    <!-- Wrap the assistant inside the formRendered check to force hard resets -->
+                    <template if:true={formRendered}>
+                        <!-- Pass down the isFormDisabled state to the assistant component -->
+                        <div class={assistantContainerClass} onchange={handleChildInputChange}>
+                            <c-agentforce-email-assistant
+                                selected-object-api-name={objectApiName}
+                                ondraftgenerate={handleAiDraftGenerated}
+                                disabled={isFormDisabled}>
+                            </c-agentforce-email-assistant>
+                        </div>
+                    </template>
+
+                    <template if:true={formRendered}>
+                        <lightning-input 
+                            label="Subject Line" 
+                            value={subject} 
+                            onchange={handleSubjectChange} 
+                            required
+                            disabled={isFormDisabled}
+                            placeholder="Enter the template email subject line"
+                            class="slds-m-bottom_small">
+                        </lightning-input>
+                    </template>
+                        
+                    <lightning-tabset variant="scoped" active-tab-value={activeTab} onselect={handleTabChange}>
+                        <lightning-tab label="Rich Text" value="richText" disabled={isFormDisabled}>
+                            <div class="slds-m-top_small">
+                                <label class="slds-form-element__label">Rich HTML Email Body</label>
+                                <lightning-input-rich-text 
+                                    value={body} 
+                                    onchange={handleBodyChange}
+                                    disabled={isFormDisabled}
+                                    valid-formats={allowedFormats}>
+                                </lightning-input-rich-text>
+                            </div>
+                        </lightning-tab>
+
+                        <lightning-tab label="Raw HTML" value="rawHtml" disabled={isFormDisabled}>
+                            <div class="slds-m-top_small">
+                                <lightning-textarea 
+                                    label="HTML Code" 
+                                    value={body} 
+                                    onchange={handleBodyChange} 
+                                    rows="12" 
+                                    disabled={isFormDisabled}
+                                    class="html-textarea-font">
+                                </lightning-textarea>
+                            </div>
+                        </lightning-tab>
+
+                        <lightning-tab label="Preview" value="preview" onactive={handlePreviewActive} disabled={isFormDisabled}>
+                            <div class="slds-m-top_small slds-box slds-theme_default preview-container">
+                                <p class="slds-text-title_bold slds-border_bottom slds-p-bottom_xx-small">Subject Preview: <span class="slds-text-weight_regular">{subject}</span></p>
+                                <div class="slds-m-top_medium">
+                                    <lightning-formatted-rich-text value={body}></lightning-formatted-rich-text>
+                                </div>
+                            </div>
+                        </lightning-tab>
+                    </lightning-tabset>
+                    
+                    <div class="slds-m-top_medium slds-text-align_right">
+                        <lightning-button 
+                            label="Cancel" 
+                            variant="neutral" 
+                            onclick={handleCancel} 
+                            class="slds-m-right_small">
+                        </lightning-button>
+                        <lightning-button 
+                            label="Save Template Configuration" 
+                            variant="brand" 
+                            disabled={isSaveDisabled}
+                            onclick={saveTemplate}>
+                        </lightning-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slds-m-top_large slds-text-align_center slds-text-body_small slds-text-color_weak">
+                <img src={iconLink} width="25" height="25" alt="Logo" class="slds-m-right_x-small" /><b>Developed By:&nbsp;
+                </b>
+                {developedBy}
+            </div>
+    </lightning-card>
+</template>
